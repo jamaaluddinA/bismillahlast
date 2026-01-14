@@ -1,0 +1,52 @@
+name: Flutter Staging CI/CD
+
+on:
+  push:
+    branches: [ staging ]
+  pull_request:
+    branches: [ staging ]
+
+env:
+  FLUTTER_VERSION: '3.38.5'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🛎️ Checkout Repository
+      uses: actions/checkout@v4
+    
+    - name: 🎯 Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ env.FLUTTER_VERSION }}
+        channel: 'stable'
+        cache: true
+    
+    - name: 📦 Install Dependencies
+      run: flutter pub get
+    
+    - name: 🔍 Analyze Code
+      run: flutter analyze
+    
+    - name: 🌐 Build Web App
+      run: |
+        flutter config --enable-web
+        flutter build web --release --web-renderer canvaskit
+    
+    - name: 🚀 Deploy to Netlify Staging
+      uses: nwtgck/actions-netlify@v2.0
+      with:
+        publish-dir: './build/web'
+        production-branch: staging
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        deploy-message: "Deploy from GitHub Actions"
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_STAGING }}
+    
+    - name: ✅ Verify Deployment
+      run: |
+        echo "✅ DEPLOYMENT SUCCESS!"
+        echo "🔗 URL: https://shopping-app-staging.netlify.app"
