@@ -1,10 +1,8 @@
-name: 🚀 Deploy to Staging
+name: 🚀 Deploy to Production
 
 on:
   push:
-    branches: [ staging ]
-  pull_request:
-    branches: [ staging ]
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -24,23 +22,24 @@ jobs:
       - name: 🔍 Analyze Code
         run: flutter analyze || true
       
-      - name: 🌐 Build Web App
+      - name: 🌐 Build for Production
         run: |
             flutter config --enable-web
-            flutter build web --release   
-      
-      - name: 🚀 Deploy to Netlify Staging
+            flutter build web --release
+
+      - name: 🚀 Deploy to Netlify Production
         uses: nwtgck/actions-netlify@v2.0
         with:
           publish-dir: './build/web'
-          production-branch: staging
-          deploy-message: "Staging Deploy: ${{ github.sha }}"
+          production-deploy: true
+          production-branch: main
+          deploy-message: "Production Deploy: ${{ github.sha }}"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_STAGING }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_PROD }}
       
-      - name: ✅ Verify Deployment
+      - name: 📢 Deployment Notification
         run: |
-          echo "✅ STAGING DEPLOYMENT SUCCESS!"
-          echo "🔗 URL: https://shopping-app-staging.netlify.app"
+          echo "🚀 PRODUCTION DEPLOYMENT COMPLETED!"
+          echo "🔗 Live URL: https://shopping-app-production.netlify.app"
           echo "📝 Commit: ${{ github.sha }}"
