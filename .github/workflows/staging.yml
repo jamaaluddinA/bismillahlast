@@ -1,10 +1,10 @@
-name: Flutter Staging CI/CD
+name: Flutter CI/CD Pipeline
 
 on:
   push:
-    branches: [ staging ]
+    branches: [ staging, main ]  # TAMBAH main di sini!
   pull_request:
-    branches: [ staging ]
+    branches: [ staging, main ]  # TAMBAH main di sini!
 
 env:
   FLUTTER_VERSION: '3.38.5'
@@ -33,20 +33,24 @@ jobs:
     - name: 🌐 Build Web App
       run: |
         flutter config --enable-web
-        flutter build web --release --web-renderer canvaskit
+        flutter build web --release --web-renderer canvaskit --no-wasm-dry-run
     
-    - name: 🚀 Deploy to Netlify Staging
+    - name: 🚀 Deploy to Netlify
       uses: nwtgck/actions-netlify@v2.0
       with:
         publish-dir: './build/web'
-        production-branch: staging
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        deploy-message: "Deploy from GitHub Actions"
+        deploy-message: "Deploy: ${{ github.ref_name }} - ${{ github.sha }}"
       env:
         NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID_STAGING }}
+        NETLIFY_SITE_ID: ${{ github.ref_name == 'main' && secrets.NETLIFY_SITE_ID_PROD || secrets.NETLIFY_SITE_ID_STAGING }}
     
     - name: ✅ Verify Deployment
       run: |
-        echo "✅ DEPLOYMENT SUCCESS!"
-        echo "🔗 URL: https://shopping-app-staging.netlify.app"
+        if [ "${{ github.ref_name }}" = "main" ]; then
+          echo "🚀 PRODUCTION DEPLOYMENT SUCCESS!"
+          echo "🔗 URL: https://shopping-app-production.netlify.app"
+        else
+          echo "✅ STAGING DEPLOYMENT SUCCESS!"
+          echo "🔗 URL: https://shopping-app-staging.netlify.app"
+        fi
