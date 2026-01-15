@@ -31,5 +31,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-web:
-  renderer: canvaskit  # Untuk performa lebih baik
